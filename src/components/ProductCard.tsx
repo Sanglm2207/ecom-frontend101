@@ -101,8 +101,9 @@ export default function ProductCard({ loading, product }: ProductCardProps) {
                 <CardMedia
                     component="img"
                     height="200"
-                    image={`https://via.placeholder.com/300x200?text=${product.name.replace(' ', '+')}`}
+                    image={product.thumbnailUrl || `https://via.placeholder.com/300x200?text=${product.name.replace(/\s/g, '+')}`}
                     alt={product.name}
+                    sx={{ objectFit: 'cover' }}
                 />
                 <CardContent sx={{ flexGrow: 1, minHeight: 120 }}>
                     <Typography gutterBottom variant="h6" component="div" sx={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }} title={product.name}>

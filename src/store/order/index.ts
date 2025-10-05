@@ -1,10 +1,8 @@
-
-
 export * from './actions';
 export * from './reducers';
 export * from './selectors';
 export * from './types';
 
-import userReducer from './reducers';
+import orderReducer from './reducers';
 
-export default userReducer;
+export default orderReducer;

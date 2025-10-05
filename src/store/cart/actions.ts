@@ -2,6 +2,8 @@ import { createAsyncThunk } from '@reduxjs/toolkit';
 import cartApi from '../../api/cartApi';
 import type { CartItem } from './types';
 import type { AppDispatch } from '..';
+import type { Coupon } from '../coupon';
+import couponApi from '../../api/couponApi';
 
 export const fetchCart = createAsyncThunk<CartItem[]>('cart/fetchCart', async () => {
     const response = await cartApi.getCart();
@@ -53,5 +55,17 @@ export const removeItemFromCart = createAsyncThunk<CartItem[], { productId: numb
         await cartApi.removeItem(productId);
         const action = await dispatch(fetchCart());
         return action.payload as CartItem[];
+    }
+);
+
+export const applyCoupon = createAsyncThunk<Coupon, { code: string }, { rejectValue: string }>(
+    'cart/applyCoupon',
+    async ({ code }, { rejectWithValue }) => {
+        try {
+            const response = await couponApi.validateCoupon(code);
+            return response.data.data; // Trả về coupon object nếu thành công
+        } catch (error: any) {
+            return rejectWithValue(error.response?.data?.message || 'Mã giảm giá không hợp lệ');
+        }
     }
 );

@@ -11,6 +11,8 @@ export interface Product {
     stockQuantity: number;
     category: Category;
     isFeatured: boolean;
+    thumbnailUrl?: string;
+    imageUrls?: string[];
     createdAt: string; // Dạng chuỗi ISO date
 }
 

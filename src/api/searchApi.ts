@@ -1,4 +1,4 @@
-import type { ProductSuggestion } from '../store/order';
+import type { ProductSuggestion } from '../store/search';
 import type { ApiResponse } from '../types';
 import axiosClient from './axiosClient';
 

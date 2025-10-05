@@ -1,6 +1,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import productApi, { type Page } from '../../api/productApi';
+import productApi, { type ProductPayload } from '../../api/productApi';
 import type { Product, ProductDetail } from './types';
+import type { Page } from '../../types';
 
 interface FetchProductsParams {
     filter?: string;
@@ -44,3 +45,51 @@ export const fetchProductDetail = createAsyncThunk<ProductDetail, string, { reje
         }
     }
 );
+
+/**
+ * Action để xóa một sản phẩm.
+ * Trả về ID của sản phẩm đã bị xóa để reducer có thể cập nhật state.
+ */
+export const deleteProduct = createAsyncThunk<number, { productId: number }, { rejectValue: string }>(
+    'product/deleteProduct',
+    async ({ productId }, { rejectWithValue }) => {
+        try {
+            await productApi.deleteProduct(productId);
+            return productId; // Trả về ID khi thành công
+        } catch (error: any) {
+            return rejectWithValue(error.response?.data?.message || 'Failed to delete product');
+        }
+    }
+);
+
+/**
+ * Action để tạo một sản phẩm mới.
+ * Trả về đối tượng sản phẩm mới đã được tạo.
+ */
+export const createProduct = createAsyncThunk<Product, { payload: ProductPayload }, { rejectValue: string }>(
+    'product/createProduct',
+    async ({ payload }, { rejectWithValue }) => {
+        try {
+            const response = await productApi.createProduct(payload);
+            return response.data.data;
+        } catch (error: any) {
+            return rejectWithValue(error.response?.data?.message || 'Failed to create product');
+        }
+    }
+);
+
+/**
+ * Action để cập nhật một sản phẩm.
+ * Trả về đối tượng sản phẩm đã được cập nhật.
+ */
+export const updateProduct = createAsyncThunk<Product, { productId: number; payload: ProductPayload }, { rejectValue: string }>(
+    'product/updateProduct',
+    async ({ productId, payload }, { rejectWithValue }) => {
+        try {
+            const response = await productApi.updateProduct(productId, payload);
+            return response.data.data;
+        } catch (error: any) {
+            return rejectWithValue(error.response?.data?.message || 'Failed to update product');
+        }
+    }
+)

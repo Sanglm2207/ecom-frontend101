@@ -1,7 +1,7 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import { fetchLatestProducts, fetchProductDetail, fetchProducts } from './actions';
-import type { Page } from '../../api/productApi';
+import { createProduct, deleteProduct, fetchLatestProducts, fetchProductDetail, fetchProducts, updateProduct } from './actions';
 import type { ProductState, Product } from './types';
+import type { Page } from '../../types';
 
 const initialState: ProductState = {
     products: [],
@@ -63,7 +63,47 @@ const productSlice = createSlice({
             .addCase(fetchProductDetail.rejected, (state, action) => {
                 state.loading = 'idle';
                 state.error = action.payload ?? 'Failed';
-            });
+            })
+            // Xử lý khi xóa sản phẩm thành công
+            .addCase(deleteProduct.fulfilled, (state, action: PayloadAction<number>) => {
+                // Xóa sản phẩm khỏi danh sách hiện tại
+                state.products = state.products.filter(p => p.id !== action.payload);
+                if (state.totalElements > 0) {
+                    state.totalElements -= 1;
+                }
+            })
+
+            // Xử lý khi tạo sản phẩm thành công
+            .addCase(createProduct.fulfilled, (state, action: PayloadAction<Product>) => {
+                // Thêm sản phẩm mới vào đầu danh sách
+                state.products.unshift(action.payload);
+                state.totalElements += 1;
+            })
+
+            // Xử lý khi cập nhật sản phẩm thành công
+            .addCase(updateProduct.fulfilled, (state, action: PayloadAction<Product>) => {
+                // Tìm và thay thế sản phẩm đã được cập nhật trong danh sách
+                const index = state.products.findIndex(p => p.id === action.payload.id);
+                if (index !== -1) {
+                    state.products[index] = action.payload;
+                }
+            })
+
+            // Bạn cũng có thể thêm các case .pending và .rejected cho các action CUD
+            // để quản lý trạng thái loading/error một cách chi tiết hơn.
+            .addMatcher(
+                (action) => action.type.endsWith('/pending') && action.type.startsWith('product/'),
+                (state) => {
+                    state.loading = 'pending';
+                }
+            )
+            .addMatcher(
+                (action) => action.type.endsWith('/rejected') && action.type.startsWith('product/'),
+                (state, action) => {
+                    state.loading = 'idle';
+                    state.error = action.payload ?? 'An error occurred';
+                }
+            );
     },
 });
 

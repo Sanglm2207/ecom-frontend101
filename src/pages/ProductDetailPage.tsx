@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { fetchProductDetail } from '../store/product/actions';
 import { selectProductLoading } from '../store/product/selectors';
@@ -16,6 +16,7 @@ export default function ProductDetailPage() {
     const productDetail = useAppSelector((state) => state.product.selectedProduct);
     const loading = useAppSelector(selectProductLoading);
     const cartLoading = useAppSelector(selectCartLoading);
+    const [mainImage, setMainImage] = useState<string | undefined>(undefined);
 
 
     const handleAddToCart = () => {
@@ -37,6 +38,12 @@ export default function ProductDetailPage() {
         }
     }, [dispatch, id]);
 
+    useEffect(() => {
+        if (productDetail?.product?.thumbnailUrl) {
+            setMainImage(productDetail.product.thumbnailUrl);
+        }
+    }, [productDetail]);
+
     if (loading === 'pending' || !productDetail) {
         return (
             <Grid container spacing={4}>
@@ -54,16 +61,42 @@ export default function ProductDetailPage() {
     }
 
     const { product, relatedProducts } = productDetail;
+    const allImages = [product.thumbnailUrl, ...(product.imageUrls || [])].filter(Boolean) as string[];
+
 
     return (
         <Box>
             <Grid container spacing={4}>
                 <Grid item xs={12} md={6}>
-                    <img
-                        src={`https://via.placeholder.com/600x400?text=${product.name.replace(' ', '+')}`}
+                    <Box
+                        component="img"
+                        src={mainImage || `https://via.placeholder.com/600x400?text=No+Image`}
                         alt={product.name}
-                        style={{ width: '100%', borderRadius: '8px' }}
+                        sx={{ width: '100%', height: 'auto', maxHeight: 500, objectFit: 'cover', borderRadius: '8px', mb: 2 }}
                     />
+                    <Grid container spacing={1}>
+                        {allImages.map((img, index) => (
+                            <Grid item key={index} xs={2}>
+                                <Box
+                                    component="img"
+                                    src={img}
+                                    alt={`thumbnail ${index + 1}`}
+                                    onClick={() => setMainImage(img)}
+                                    sx={{
+                                        width: '100%',
+                                        height: 80,
+                                        objectFit: 'cover',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer',
+                                        border: mainImage === img ? '2px solid' : '2px solid transparent',
+                                        borderColor: mainImage === img ? 'primary.main' : 'transparent',
+                                        opacity: mainImage === img ? 1 : 0.7,
+                                        '&:hover': { opacity: 1 },
+                                    }}
+                                />
+                            </Grid>
+                        ))}
+                    </Grid>
                 </Grid>
                 <Grid item xs={12} md={6}>
                     <Typography variant="h4" component="h1" gutterBottom>{product.name}</Typography>

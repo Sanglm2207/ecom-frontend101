@@ -1,7 +1,7 @@
 import { Paper, List, ListItem, ListItemText, ListItemAvatar, Avatar, Typography, CircularProgress, Box } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { useAppSelector } from '../store/hooks';
-import { selectSearchLoading, selectSearchSuggestions } from '../store/order';
+import { selectSearchLoading, selectSearchSuggestions } from '../store/search';
 interface SearchSuggestionsProps {
     onClose: () => void;
 }

@@ -4,14 +4,18 @@ import {
     addToCart,
     updateCartItemQuantity,
     removeItemFromCart,
-    removeMultipleItemsFromCart // Import action mới
+    removeMultipleItemsFromCart, // Import action mới
+    applyCoupon
 } from './actions';
 import type { CartState, CartItem } from './types';
+import type { Coupon } from '../coupon';
+import { createOrder } from '../order';
 
 const initialState: CartState = {
     items: [],
     loading: 'idle',
     error: null,
+    appliedCoupon: null,
 };
 
 // Hàm helper để tránh lặp code
@@ -32,35 +36,65 @@ const cartSlice = createSlice({
     name: 'cart',
     initialState,
     reducers: {
-        // Các reducer đồng bộ (nếu có) sẽ được định nghĩa ở đây
+        /**
+         * Action để xóa thông báo lỗi khỏi state.
+         * Được gọi khi người dùng bắt đầu một hành động mới.
+         */
+        clearCartError: (state) => {
+            state.error = null;
+        },
+
+        /**
+         * Action để gỡ bỏ mã giảm giá đã áp dụng.
+         */
+        removeCoupon: (state) => {
+            state.appliedCoupon = null;
+            state.error = null; // Cũng xóa lỗi liên quan đến coupon
+        },
+
+        clearClientCart: (state) => {
+            state.items = [];
+            state.appliedCoupon = null;
+            state.error = null;
+        }
     },
     extraReducers: (builder) => {
-        // Sử dụng các hàm helper cho các action
         builder
             .addCase(fetchCart.pending, handlePending)
             .addCase(fetchCart.rejected, handleRejected)
-            .addCase(fetchCart.fulfilled, handleFulfilled);
-
-        builder
+            .addCase(fetchCart.fulfilled, handleFulfilled)
             .addCase(addToCart.pending, handlePending)
             .addCase(addToCart.rejected, handleRejected)
-            .addCase(addToCart.fulfilled, handleFulfilled);
-
-        builder
+            .addCase(addToCart.fulfilled, handleFulfilled)
             .addCase(updateCartItemQuantity.pending, handlePending)
             .addCase(updateCartItemQuantity.rejected, handleRejected)
-            .addCase(updateCartItemQuantity.fulfilled, handleFulfilled);
-
-        builder
+            .addCase(updateCartItemQuantity.fulfilled, handleFulfilled)
             .addCase(removeItemFromCart.pending, handlePending)
             .addCase(removeItemFromCart.rejected, handleRejected)
-            .addCase(removeItemFromCart.fulfilled, handleFulfilled);
-
-        builder
+            .addCase(removeItemFromCart.fulfilled, handleFulfilled)
             .addCase(removeMultipleItemsFromCart.pending, handlePending)
             .addCase(removeMultipleItemsFromCart.rejected, handleRejected)
-            .addCase(removeMultipleItemsFromCart.fulfilled, handleFulfilled);
+            .addCase(removeMultipleItemsFromCart.fulfilled, handleFulfilled)
+            .addCase(createOrder.fulfilled, (state) => {
+                state.items = [];
+                state.appliedCoupon = null; // TypeScript bây giờ đã hiểu thuộc tính này
+            })
+            .addCase(applyCoupon.pending, (state) => {
+                state.loading = 'pending';
+                state.error = null;
+            })
+            .addCase(applyCoupon.fulfilled, (state, action: PayloadAction<Coupon>) => {
+                state.loading = 'idle';
+                state.appliedCoupon = action.payload;
+            })
+            .addCase(applyCoupon.rejected, (state, action) => {
+                state.loading = 'idle';
+                state.error = action.payload as string;
+                state.appliedCoupon = null;
+            });
     },
 });
+
+export const { removeCoupon, clearCartError, clearClientCart } = cartSlice.actions;
 
 export default cartSlice.reducer;

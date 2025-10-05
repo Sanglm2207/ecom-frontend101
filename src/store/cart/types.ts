@@ -1,3 +1,4 @@
+import type { Coupon } from "../coupon";
 import type { Product } from "../product";
 
 export interface CartItem {
@@ -9,4 +10,5 @@ export interface CartState {
     items: CartItem[];
     loading: 'idle' | 'pending';
     error: string | null;
+    appliedCoupon: Coupon | null;
 }
