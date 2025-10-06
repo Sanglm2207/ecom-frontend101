@@ -6,6 +6,9 @@ import searchReducer from './search';
 import orderReducer from './order';
 import userReducer from './user';
 import couponReducer from './coupon';
+import socketReducer from './socket';
+import notificationReducer from './notification';
+import { socketMiddleware } from './middleware/socketMiddleware';
 
 export const store = configureStore({
     reducer: {
@@ -16,7 +19,11 @@ export const store = configureStore({
         order: orderReducer,
         user: userReducer,
         coupon: couponReducer,
+        socket: socketReducer,
+        notification: notificationReducer,
     },
+    middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(socketMiddleware),
+
 });
 
 // Định nghĩa các kiểu dữ liệu cho Redux store và dispatch

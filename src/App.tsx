@@ -7,7 +7,8 @@ import { fetchCurrentUser } from './store/auth';
 import LoadingSpinner from './components/shared/LoadingSpinner';
 import { useAppDispatch } from './store/hooks';
 import { fetchCart } from './store/cart';
-
+import { wsConnect } from './store/socket';
+import { fetchUnreadNotifications } from './store/notification';
 function App() {
   const dispatch = useAppDispatch();
   const [isInitializing, setIsInitializing] = useState(true);
@@ -19,6 +20,8 @@ function App() {
       .then(() => {
         // Nếu lấy user thành công (đã đăng nhập), thì fetch giỏ hàng
         dispatch(fetchCart());
+        dispatch(fetchUnreadNotifications());
+        dispatch(wsConnect()); // Kết nối WebSocket
       })
       .catch(() => {
         // Không làm gì nếu chưa đăng nhập

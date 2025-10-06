@@ -28,6 +28,10 @@ import { selectIsAuthenticated, selectCurrentUser, logout } from '../../store/au
 import { selectTotalCartItems } from '../../store/cart';
 import authApi from '../../api/authApi';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { wsDisconnect } from '../../store/socket';
+import { selectUserUnreadNotificationCount } from '../../store/notification';
+import NotificationsOutlinedIcon from '@mui/icons-material/NotificationsOutlined';
+import NotificationPopover from '../NotificationPopover';
 
 // --- Styled Components for Search Bar ---
 const Search = styled('div')(({ theme }) => ({
@@ -109,6 +113,7 @@ export default function Header() {
         } catch (error) {
             console.error("Logout failed on server:", error);
         } finally {
+            dispatch(wsDisconnect()); // Dispatch action để ngắt kết nối
             dispatch(logout());
             navigate('/auth/login');
         }
@@ -126,9 +131,14 @@ export default function Header() {
 
     const handleCloseSuggestions = () => {
         setShowSuggestions(false);
-        // Tùy chọn: Xóa searchTerm khi click ra ngoài
-        // setSearchTerm(''); 
+        setSearchTerm(''); // Xóa searchTerm khi click ra ngoài
     };
+
+    const unreadNotificationCount = useAppSelector(selectUserUnreadNotificationCount);
+    const [anchorElNotif, setAnchorElNotif] = useState<null | HTMLElement>(null);
+    const handleOpenNotifMenu = (event: MouseEvent<HTMLElement>) => setAnchorElNotif(event.currentTarget);
+    const handleCloseNotifMenu = () => setAnchorElNotif(null);
+
 
     return (
         <AppBar position="sticky" elevation={0}>
@@ -180,6 +190,23 @@ export default function Header() {
                                 </Badge>
                             </IconButton>
                         </Tooltip>
+
+                        {isAuthenticated && (
+                            <>
+                                <Tooltip title="Thông báo">
+                                    <IconButton onClick={handleOpenNotifMenu} size="large" color="inherit">
+                                        <Badge badgeContent={unreadNotificationCount} color="error">
+                                            <NotificationsOutlinedIcon />
+                                        </Badge>
+                                    </IconButton>
+                                </Tooltip>
+                                <NotificationPopover
+                                    anchorEl={anchorElNotif}
+                                    onClose={handleCloseNotifMenu}
+                                    notificationsSource="user" // Chỉ định nguồn là "user"
+                                />
+                            </>
+                        )}
 
                         {isAuthenticated && user ? (
                             // Giao diện khi đã đăng nhập
