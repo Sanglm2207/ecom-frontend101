@@ -33,6 +33,7 @@ import CheckoutPage from '../pages/CheckoutPage';
 import OrderSuccessPage from '../pages/OrderSuccessPage';
 import OrderHistoryPage from '../pages/OrderHistoryPage';
 import OrderDetailPage from '../pages/OrderDetailPage';
+import ProductImportPage from '../pages/admin/ProductImportPage';
 
 /**
  * Component Wrapper để áp dụng theme và background cho khu vực người dùng.
@@ -89,6 +90,7 @@ export default function AppRoutes() {
                         <Route path="products" element={<ProductManagementPage />} />
                         <Route path="products/new" element={<ProductFormPage />} />
                         <Route path="products/edit/:id" element={<ProductFormPage />} />
+                        <Route path="products/import" element={<ProductImportPage />} />
                         <Route path="coupons" element={<CouponManagementPage />} />
                         <Route path="users" element={<UserManagementPage />} />
                     </Route>

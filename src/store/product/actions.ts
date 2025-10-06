@@ -1,5 +1,5 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import productApi, { type ProductPayload } from '../../api/productApi';
+import productApi, { type ProductImportResult, type ProductPayload } from '../../api/productApi';
 import type { Product, ProductDetail } from './types';
 import type { Page } from '../../types';
 
@@ -92,4 +92,16 @@ export const updateProduct = createAsyncThunk<Product, { productId: number; payl
             return rejectWithValue(error.response?.data?.message || 'Failed to update product');
         }
     }
-)
+);
+
+export const importProductsFromFile = createAsyncThunk<ProductImportResult, File, { rejectValue: string }>(
+    'product/importFromFile',
+    async (file, { rejectWithValue }) => {
+        try {
+            const response = await productApi.uploadProductsFile(file);
+            return response.data.data;
+        } catch (error: any) {
+            return rejectWithValue(error.response?.data?.message || 'Import failed');
+        }
+    }
+);

@@ -8,6 +8,7 @@ import userReducer from './user';
 import couponReducer from './coupon';
 import socketReducer from './socket';
 import notificationReducer from './notification';
+import categoryReducer from './category';
 import { socketMiddleware } from './middleware/socketMiddleware';
 
 export const store = configureStore({
@@ -21,6 +22,7 @@ export const store = configureStore({
         coupon: couponReducer,
         socket: socketReducer,
         notification: notificationReducer,
+        category: categoryReducer,
     },
     middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(socketMiddleware),
 

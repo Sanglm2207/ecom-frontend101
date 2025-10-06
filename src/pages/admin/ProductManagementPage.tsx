@@ -7,11 +7,13 @@ import {
     MenuItem,
     Button,
     Avatar,
+    Box,
 } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import SystemUpdateAltIcon from '@mui/icons-material/SystemUpdateAlt';
 import { useSnackbar } from 'notistack';
 
 import productApi from '../../api/productApi';
@@ -153,13 +155,14 @@ export default function ProductManagementPage() {
             searchFields={['name']}
             renderActions={renderProductActions}
             mainAction={
-                <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={() => navigate('/admin/products/new')}
-                >
-                    Thêm sản phẩm
-                </Button>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Button variant="outlined" startIcon={<SystemUpdateAltIcon />} onClick={() => navigate('/admin/products/import')}>
+                        Import
+                    </Button>
+                    <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/admin/products/new')}>
+                        Thêm sản phẩm
+                    </Button>
+                </Box>
             }
         />
     );

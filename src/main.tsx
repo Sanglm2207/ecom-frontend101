@@ -8,6 +8,9 @@ import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import { webSocketService } from './services/WebSocketService';
 
+import 'slick-carousel/slick/slick.css';
+import 'slick-carousel/slick/slick-theme.css';
+
 webSocketService.initialize(store);
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
