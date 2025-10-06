@@ -1,27 +1,38 @@
-import { Popover, List, ListItem, ListItemText, Typography, Divider, Box, Button, ListItemButton } from '@mui/material';
+import { Popover, List, ListItemText, Typography, Divider, Box, Button, ListItemButton, Avatar, ListItemAvatar, Chip } from '@mui/material';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import MarkChatReadIcon from '@mui/icons-material/MarkChatRead';
+import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
+
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { markNotificationAsRead, selectAdminNotifications, selectAdminUnreadNotificationCount, selectUserNotifications, selectUserUnreadNotificationCount } from '../store/notification';
-import { type Notification } from '../store/notification';
-import theme from '../styles/theme';
+import { selectAdminNotifications, selectUserNotifications, selectAdminUnreadNotificationCount, selectUserUnreadNotificationCount, markNotificationAsRead, type Notification, markAllNotificationsAsRead } from '../store/notification';
 
-interface NotificationPopoverProps {
-    anchorEl: HTMLElement | null;
-    onClose: () => void;
-    notificationsSource: 'user' | 'admin'; // Prop mới
-}
+// Icon cho từng loại thông báo
+const getNotificationIcon = (type: string) => {
+    switch (type) {
+        case 'NEW_ORDER':
+            return <ShoppingBagIcon color="success" />;
+        case 'ORDER_STATUS_UPDATED':
+            return <LocalShippingIcon color="primary" />;
+        case 'NEW_USER':
+            return <PersonAddIcon color="info" />;
+        case 'NEW_PRODUCT':
+            return <AddShoppingCartIcon color="secondary" />;
+        default:
+            return <NotificationsIcon />;
+    }
+};
 
-export default function NotificationPopover({ anchorEl, onClose, notificationsSource }: NotificationPopoverProps) {
+
+export default function NotificationPopover({ anchorEl, onClose, notificationsSource }: { anchorEl: HTMLElement | null; onClose: () => void; notificationsSource: 'user' | 'admin'; }) {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
 
-    // Lấy dữ liệu và số lượng dựa trên prop `notificationsSource`
-    const notifications = useAppSelector(
-        notificationsSource === 'admin' ? selectAdminNotifications : selectUserNotifications
-    );
-    const unreadCount = useAppSelector(
-        notificationsSource === 'admin' ? selectAdminUnreadNotificationCount : selectUserUnreadNotificationCount
-    );
+    const notifications = useAppSelector(notificationsSource === 'admin' ? selectAdminNotifications : selectUserNotifications);
+    const unreadCount = useAppSelector(notificationsSource === 'admin' ? selectAdminUnreadNotificationCount : selectUserUnreadNotificationCount);
 
     const handleNotificationClick = (notification: Notification) => {
         if (!notification.isRead) {
@@ -32,6 +43,11 @@ export default function NotificationPopover({ anchorEl, onClose, notificationsSo
         }
         onClose();
     };
+
+    const handleMarkAllAsRead = () => {
+        dispatch(markAllNotificationsAsRead());
+    };
+
     return (
         <Popover
             open={Boolean(anchorEl)}
@@ -39,53 +55,74 @@ export default function NotificationPopover({ anchorEl, onClose, notificationsSo
             onClose={onClose}
             anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
             transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-            PaperProps={{ sx: { width: 380, ...theme.glass, backdropFilter: 'blur(25px) saturate(200%)' } }}
-
+            PaperProps={{
+                sx: {
+                    width: 380,
+                    borderRadius: 2,
+                    boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+                    // Giao diện sẽ tự động đổi màu theo theme admin/user
+                }
+            }}
         >
             <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="h6" fontWeight="bold">Thông báo</Typography>
-                {unreadCount > 0 && <Button size="small">Đánh dấu đã đọc tất cả</Button>}
+                {unreadCount > 0 && <Chip label={`${unreadCount} mới`} color="primary" size="small" />}
             </Box>
             <Divider />
 
             <List sx={{ maxHeight: 400, overflow: 'auto', p: 0 }}>
                 {notifications.length > 0 ? (
                     notifications.map((notif) => (
-                        <ListItem key={notif.id} disablePadding>
-                            <ListItemButton
-                                onClick={() => handleNotificationClick(notif)}
-                                sx={{
-                                    // Làm mờ thông báo đã đọc
-                                    opacity: notif.isRead ? 0.6 : 1,
-                                    // Thêm một chấm xanh cho thông báo chưa đọc
-                                    '&::before': notif.isRead ? {} : {
-                                        content: '""',
-                                        display: 'inline-block',
-                                        width: '8px',
-                                        height: '8px',
-                                        borderRadius: '50%',
-                                        backgroundColor: 'primary.main',
-                                        marginRight: 1.5,
-                                    }
-                                }}
-                            >
-                                <ListItemText
-                                    primary={
-                                        <Typography variant="body2" component="span" sx={{ fontWeight: notif.isRead ? 'normal' : 'bold' }}>
-                                            {notif.message}
-                                        </Typography>
-                                    }
-                                    secondary={new Date(notif.timestamp).toLocaleString('vi-VN')}
-                                />
-                            </ListItemButton>
-                        </ListItem>
+                        <ListItemButton
+                            key={notif.id}
+                            onClick={() => handleNotificationClick(notif)}
+                            sx={{
+                                bgcolor: notif.isRead ? 'transparent' : 'action.hover',
+                                alignItems: 'flex-start',
+                                py: 1.5
+                            }}
+                        >
+                            <ListItemAvatar sx={{ mt: 0.5 }}>
+                                <Avatar sx={{ bgcolor: 'background.default' }}>
+                                    {getNotificationIcon(notif.type)}
+                                </Avatar>
+                            </ListItemAvatar>
+                            <ListItemText
+                                primary={
+                                    <Typography variant="body2" component="span" sx={{ fontWeight: notif.isRead ? 'normal' : 'bold' }}>
+                                        {notif.message}
+                                    </Typography>
+                                }
+                                secondary={
+                                    <Typography variant="caption" color="text.secondary">
+                                        {new Date(notif.createdAt).toLocaleString('vi-VN')}
+                                    </Typography>
+                                }
+                            />
+                        </ListItemButton>
                     ))
                 ) : (
-                    <Typography sx={{ p: 3, textAlign: 'center' }} color="text.secondary">
+                    <Typography sx={{ p: 4, textAlign: 'center' }} color="text.secondary">
                         Bạn không có thông báo nào.
                     </Typography>
                 )}
             </List>
+
+            {notifications.length > 0 && (
+                <>
+                    <Divider />
+                    <Box sx={{ p: 1, textAlign: 'center' }}>
+                        <Button
+                            size="small"
+                            startIcon={<MarkChatReadIcon />}
+                            onClick={handleMarkAllAsRead}
+                            disabled={unreadCount === 0}
+                        >
+                            Đánh dấu đã đọc tất cả
+                        </Button>
+                    </Box>
+                </>
+            )}
         </Popover>
     );
 }

@@ -39,7 +39,7 @@ const productApi = {
    * @param payload - Dữ liệu của sản phẩm mới
    */
     createProduct: (payload: ProductPayload): Promise<{ data: ApiResponse<Product> }> => {
-        return axiosClient.post('/products', payload);
+        return axiosClient.post('/products/', payload);
     },
 
     /**

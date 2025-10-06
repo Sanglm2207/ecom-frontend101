@@ -1,6 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { NotificationState, Notification } from './types';
-import { fetchUnreadNotifications, markNotificationAsRead } from './actions';
+import { fetchUnreadNotifications, markAllNotificationsAsRead, markNotificationAsRead } from './actions';
 
 const initialState: NotificationState = {
     userNotifications: [],
@@ -42,12 +42,19 @@ const notificationSlice = createSlice({
         builder
             // Xử lý khi fetch thông báo chưa đọc thành công (cho người dùng hiện tại)
             .addCase(fetchUnreadNotifications.fulfilled, (state, action: PayloadAction<Notification[]>) => {
-                // Gộp thông báo mới từ API với thông báo đã có trong state, tránh trùng lặp
-                const existingIds = new Set(state.userNotifications.map(n => n.id));
-                const newNotifications = action.payload.filter(n => !existingIds.has(n.id));
+                // Lấy role từ meta arg (cách để truyền dữ liệu phụ vào extraReducer)
+                const role = (action.meta.arg as { role: 'ADMIN' | 'USER' }).role;
+                const notifications = action.payload;
 
-                // Giữ lại các thông báo cũ và thêm các thông báo mới vào đầu
-                state.userNotifications = [...newNotifications, ...state.userNotifications];
+                if (role === 'ADMIN') {
+                    const existingIds = new Set(state.adminNotifications.map(n => n.id));
+                    const newNotifications = notifications.filter(n => !existingIds.has(n.id));
+                    state.adminNotifications = [...newNotifications, ...state.adminNotifications];
+                } else {
+                    const existingIds = new Set(state.userNotifications.map(n => n.id));
+                    const newNotifications = notifications.filter(n => !existingIds.has(n.id));
+                    state.userNotifications = [...newNotifications, ...state.userNotifications];
+                }
             })
             // Xử lý khi đánh dấu một thông báo là đã đọc
             .addCase(markNotificationAsRead.fulfilled, (state, action: PayloadAction<number>) => {
@@ -63,6 +70,11 @@ const notificationSlice = createSlice({
                 if (notification) {
                     notification.isRead = true;
                 }
+            })
+            .addCase(markAllNotificationsAsRead.fulfilled, (state) => {
+                // Cập nhật trạng thái 'isRead' cho tất cả thông báo trong state hiện tại
+                state.userNotifications.forEach(n => { n.isRead = true; });
+                state.adminNotifications.forEach(n => { n.isRead = true; });
             });
     },
 });

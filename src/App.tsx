@@ -17,11 +17,12 @@ function App() {
     // Thử lấy thông tin người dùng
     dispatch(fetchCurrentUser())
       .unwrap()
-      .then(() => {
-        // Nếu lấy user thành công (đã đăng nhập), thì fetch giỏ hàng
+      .then((user) => { // user được trả về từ payload
+        // Nếu lấy user thành công
         dispatch(fetchCart());
-        dispatch(fetchUnreadNotifications());
-        dispatch(wsConnect()); // Kết nối WebSocket
+        // Truyền role vào action
+        dispatch(fetchUnreadNotifications({ role: user.role }));
+        dispatch(wsConnect());
       })
       .catch(() => {
         // Không làm gì nếu chưa đăng nhập

@@ -97,6 +97,7 @@ export default function UserManagementPage() {
             fetchData={fetchUsers}
             title="Quản lý Người dùng"
             searchPlaceholder="Tìm theo tên đăng nhập..."
+            searchFields={['username']}
             renderActions={renderUserActions}
         />
     );

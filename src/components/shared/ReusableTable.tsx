@@ -20,7 +20,7 @@ interface ReusableTableProps<T> {
     fetchData: (params: { page: number, size: number, sort?: string, filter?: string }) => Promise<Page<T>>;
     title: string;
     searchPlaceholder: string;
-    searchFields?: string[];
+    searchFields: string[];
     renderActions?: (item: T) => ReactNode;
     refreshKey?: number;
     mainAction?: ReactNode; // Prop mới để nhận nút hành động chính
@@ -35,7 +35,7 @@ export default function ReusableTable<T extends { id: any }>({
     fetchData,
     title,
     searchPlaceholder,
-    searchFields = ['name'],
+    searchFields,
     renderActions,
     refreshKey = 0,
     mainAction, // Nhận nút hành động chính
@@ -62,7 +62,6 @@ export default function ReusableTable<T extends { id: any }>({
 
         let filterParam;
         if (debouncedSearchTerm && debouncedSearchTerm.trim() !== '' && searchFields.length > 0) {
-            // Xây dựng câu query OR cho tất cả các trường được chỉ định
             filterParam = searchFields
                 .map(field => `${field}:'${debouncedSearchTerm}'`)
                 .join(' or ');
@@ -81,12 +80,9 @@ export default function ReusableTable<T extends { id: any }>({
         fetchData(params)
             .then(setData)
             .catch(err => {
-                console.error("ReusableTable fetchData failed:", err);
                 setError("Không thể tải dữ liệu.");
             })
-            .finally(() => {
-                setLoading(false);
-            });
+            .finally(() => setLoading(false));
 
     }, [page, rowsPerPage, debouncedSearchTerm, sort, fetchData, refreshKey, searchFields]);
 

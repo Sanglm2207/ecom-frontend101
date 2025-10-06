@@ -1,8 +1,6 @@
 import { useCallback, useState } from 'react';
 import { Chip, IconButton, Tooltip, Typography, Box, Button, Switch } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import ToggleOnIcon from '@mui/icons-material/ToggleOn';
-import ToggleOffIcon from '@mui/icons-material/ToggleOff';
 import AddIcon from '@mui/icons-material/Add';
 import { useSnackbar } from 'notistack';
 import type { CouponPayload } from '../../api/couponApi';
@@ -122,6 +120,7 @@ export default function CouponManagementPage() {
                 fetchData={fetchCouponsData}
                 title="Quản lý Khuyến mại"
                 searchPlaceholder="Tìm theo mã giảm giá..."
+                searchFields={['code']}
                 renderActions={renderCouponActions}
                 mainAction={
                     <Button variant="contained" startIcon={<AddIcon />} onClick={() => setIsModalOpen(true)}>

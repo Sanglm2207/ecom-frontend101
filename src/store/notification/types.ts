@@ -4,6 +4,7 @@ export interface Notification {
     message: string;
     link: string;
     timestamp: string;
+    createdAt: string;
     isRead?: boolean; // Sẽ dùng sau
 }
 

@@ -150,6 +150,7 @@ export default function ProductManagementPage() {
             fetchData={fetchProductsData}
             title="Quản lý Sản phẩm"
             searchPlaceholder="Tìm theo tên sản phẩm..."
+            searchFields={['name']}
             renderActions={renderProductActions}
             mainAction={
                 <Button

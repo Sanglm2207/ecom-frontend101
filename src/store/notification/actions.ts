@@ -2,9 +2,9 @@ import { createAsyncThunk } from '@reduxjs/toolkit';
 import notificationApi from '../../api/notificationApi';
 import type { Notification } from './types';
 
-export const fetchUnreadNotifications = createAsyncThunk<Notification[]>(
+export const fetchUnreadNotifications = createAsyncThunk<Notification[], { role: 'ADMIN' | 'USER' }>(
     'notification/fetchUnread',
-    async () => {
+    async (_, { rejectWithValue }) => {
         const response = await notificationApi.getMyUnreadNotifications();
         return response.data.data;
     }
@@ -16,5 +16,12 @@ export const markNotificationAsRead = createAsyncThunk<number, { id: number }>(
     async ({ id }) => {
         await notificationApi.markAsRead(id);
         return id; // Trả về ID để reducer xử lý
+    }
+);
+
+export const markAllNotificationsAsRead = createAsyncThunk<void, void>(
+    'notification/markAllAsRead',
+    async () => {
+        await notificationApi.markAllAsRead();
     }
 );
