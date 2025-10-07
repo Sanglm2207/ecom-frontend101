@@ -6,3 +6,17 @@ export interface UserState {
     loading: 'idle' | 'pending';
     error: string | null;
 }
+
+export interface UserProfilePayload {
+    email: string;
+    fullName?: string;
+    phone?: string;
+    address?: string;
+    avatarUrl?: string;
+}
+
+export interface ChangePasswordPayload {
+    currentPassword: string;
+    newPassword: string;
+    confirmationPassword: string;
+}

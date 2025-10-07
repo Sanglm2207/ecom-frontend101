@@ -34,6 +34,9 @@ import OrderSuccessPage from '../pages/OrderSuccessPage';
 import OrderHistoryPage from '../pages/OrderHistoryPage';
 import OrderDetailPage from '../pages/OrderDetailPage';
 import ProductImportPage from '../pages/admin/ProductImportPage';
+import ProfilePage from '../pages/ProfilePage';
+import UserDetailPage from '../components/admin/UserDetailPage';
+import SettingsPage from '../pages/admin/SettingsPage';
 
 /**
  * Component Wrapper để áp dụng theme và background cho khu vực người dùng.
@@ -70,6 +73,7 @@ export default function AppRoutes() {
                         <Route path="cart" element={<CartPage />} />
                         <Route path="checkout" element={<CheckoutPage />} />
                         <Route path="order-success/:id" element={<OrderSuccessPage />} />
+                        <Route path="profile" element={<ProfilePage />} />
                         <Route path="profile/orders" element={<OrderHistoryPage />} />
                         <Route path="orders/:id" element={<OrderDetailPage />} />
                     </Route>
@@ -93,6 +97,8 @@ export default function AppRoutes() {
                         <Route path="products/import" element={<ProductImportPage />} />
                         <Route path="coupons" element={<CouponManagementPage />} />
                         <Route path="users" element={<UserManagementPage />} />
+                        <Route path="settings" element={<SettingsPage />} />
+                        <Route path="users/:id" element={<UserDetailPage />} />
                     </Route>
                 </Route>
 

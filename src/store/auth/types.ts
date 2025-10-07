@@ -2,7 +2,11 @@ export interface User {
     id: number;
     username: string;
     role: 'USER' | 'ADMIN';
-    // Thêm các trường khác từ User entity của backend nếu cần
+    email: string;
+    fullName?: string;
+    phone?: string;
+    address?: string;
+    avatarUrl?: string;
 }
 
 export interface AuthRequestDTO {

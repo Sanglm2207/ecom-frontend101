@@ -213,7 +213,12 @@ export default function Header() {
                             <Box>
                                 <Tooltip title="Mở cài đặt">
                                     <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                                        <Avatar alt={user.username.toUpperCase()}>{user.username.charAt(0).toUpperCase()}</Avatar>
+                                        <Avatar
+                                            alt={user.username.toUpperCase()}
+                                            src={user.avatarUrl}
+                                        >
+                                            {!user.avatarUrl && user.username.charAt(0).toUpperCase()}
+                                        </Avatar>
                                     </IconButton>
                                 </Tooltip>
                                 <Menu
@@ -225,14 +230,18 @@ export default function Header() {
                                     open={Boolean(anchorElUser)}
                                     onClose={handleCloseUserMenu}
                                 >
-                                    <MenuItem onClick={() => { handleCloseUserMenu(); navigate('/profile'); }}>Tài khoản</MenuItem>
+                                    <MenuItem onClick={() => { handleCloseUserMenu(); navigate('/profile'); }}>
+                                        <Typography textAlign="center">Tài khoản</Typography>
+                                    </MenuItem>
                                     <MenuItem onClick={() => { handleCloseUserMenu(); navigate('/profile/orders'); }}>
                                         <Typography textAlign="center">Đơn hàng của tôi</Typography>
                                     </MenuItem>
                                     {user.role === 'ADMIN' && (
                                         <MenuItem onClick={() => { handleCloseUserMenu(); navigate('/admin'); }}>Trang quản trị</MenuItem>
                                     )}
-                                    <MenuItem onClick={handleLogout}>Đăng xuất</MenuItem>
+                                    <MenuItem onClick={handleLogout}>
+                                        <Typography textAlign="center">Đăng xuất</Typography>
+                                    </MenuItem>
                                 </Menu>
                             </Box>
                         ) : (

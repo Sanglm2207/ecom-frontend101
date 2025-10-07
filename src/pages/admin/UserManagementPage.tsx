@@ -7,10 +7,13 @@ import ReusableTable, { type ColumnConfig } from '../../components/shared/Reusab
 import type { User } from '../../store/auth';
 import type { Page } from '../../types';
 import { useAppDispatch } from '../../store/hooks';
+import { useNavigate } from 'react-router-dom';
 
 export default function UserManagementPage() {
     const dispatch = useAppDispatch();
     const { enqueueSnackbar } = useSnackbar();
+    const navigate = useNavigate();
+
 
     // State cho UI của Menu
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -98,6 +101,7 @@ export default function UserManagementPage() {
             title="Quản lý Người dùng"
             searchPlaceholder="Tìm theo tên đăng nhập..."
             searchFields={['username']}
+            onRowClick={(user) => navigate(`/admin/users/${user.id}`)}
             renderActions={renderUserActions}
         />
     );

@@ -9,7 +9,13 @@ export default function AdminLayout() {
         <ThemeProvider theme={adminTheme}>
             <Box sx={{ display: 'flex' }}>
                 <AdminSidebar />
-                <Box component="main" sx={{ flexGrow: 1, p: 3, bgcolor: 'background.default', minHeight: '100vh' }}>
+                <Box component="main" sx={{
+                    flexGrow: 1,
+                    // p: 3,
+                    bgcolor: 'background.default',
+                    minHeight: '100vh'
+                }}
+                >
                     <AdminHeader />
                     <Toolbar />
                     <Outlet />

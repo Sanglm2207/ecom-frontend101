@@ -8,7 +8,9 @@ const breadcrumbNameMap: { [key: string]: string } = {
     '/admin/products': 'Danh sách sản phẩm',
     '/admin/products/new': 'Thêm mới sản phẩm',
     '/admin/users': 'Danh sách khách hàng',
-    '/admin/coupons': "Quản lý Khuyến mại"
+    '/admin/coupons': "Quản lý Khuyến mại",
+    '/admin/products/import': "Nhập sản phẩm",
+    '/admin/settings': 'Cài đặt tài khoản',
 };
 
 export default function AdminBreadcrumbs() {

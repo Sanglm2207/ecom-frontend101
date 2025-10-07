@@ -15,7 +15,6 @@ export default function AdminRoute() {
     const authLoading = useAppSelector(selectAuthLoading);
     const location = useLocation();
 
-    // Trong khi đang kiểm tra session (lần đầu tải app), hiển thị loading
     if (authLoading === 'pending') {
         return (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -24,18 +23,11 @@ export default function AdminRoute() {
         );
     }
 
-    // Điều kiện để được truy cập: đã đăng nhập VÀ có vai trò ADMIN
     const isAdmin = isAuthenticated && user?.role === 'ADMIN';
 
-    // Nếu là admin, cho phép render các trang con (Orders, Products...)
-    // Outlet là component đại diện cho các route con được lồng bên trong.
     if (isAdmin) {
         return <Outlet />;
     }
 
-    // Nếu chưa đăng nhập hoặc không phải admin, chuyển hướng
-    // `replace` sẽ thay thế entry hiện tại trong lịch sử duyệt web,
-    // ngăn người dùng bấm nút "Back" để quay lại trang admin.
-    // `state` được dùng để có thể hiển thị thông báo ở trang đích nếu cần.
     return <Navigate to="/" state={{ from: location }} replace />;
 }
