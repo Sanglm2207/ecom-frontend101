@@ -1,91 +1,67 @@
-import { Chip, Tooltip, IconButton, Menu, MenuItem, Divider } from "@mui/material";
-import { useSnackbar } from "notistack";
-import { useState, useCallback, type MouseEvent } from "react";
-import ReusableTable, { type ColumnConfig } from "../../components/shared/ReusableTable";
-import { useAppDispatch } from "../../store/hooks";
-import { type OrderStatus, type Order, fetchAdminOrders, updateOrderStatus } from "../../store/order";
-import type { Page } from "../../types";
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-// --- Các hàm tiện ích ---
-const getStatusChipColor = (status: OrderStatus): 'warning' | 'info' | 'primary' | 'success' | 'error' | 'default' => {
-    switch (status) {
-        case 'PENDING': return 'warning';
-        case 'PROCESSING': return 'info';
-        case 'SHIPPED': return 'primary';
-        case 'DELIVERED': return 'success';
-        case 'CANCELED': return 'error';
-        default: return 'default';
-    }
-};
+import { useCallback, useState, type SyntheticEvent } from 'react';
+import {
+    Box,
+    Chip,
+    Paper,
+    Tab,
+    Tabs,
+    Typography
+} from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
-const getStatusText = (status: OrderStatus): string => {
-    switch (status) {
-        case 'PENDING': return 'Chờ xác nhận';
-        case 'PROCESSING': return 'Đang xử lý';
-        case 'SHIPPED': return 'Đang giao';
-        case 'DELIVERED': return 'Đã giao';
-        case 'CANCELED': return 'Đã hủy';
-        default: return status;
-    }
-}
+import { fetchAdminOrders, type Order } from '../../store/order';
+import ReusableTable, { type ColumnConfig } from '../../components/shared/ReusableTable';
+import { useAppDispatch } from '../../store/hooks';
+import type { Page } from '../../types';
+import { formatCurrency, formatDate, getStatusChipColor, getStatusText } from '../../utils';
 
-const formatCurrency = (amount: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
-const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString('vi-VN');
+const STATUS_TABS = [
+    { label: 'Tất cả', value: 'ALL' },
+    { label: 'Chờ xác nhận', value: 'PENDING' },
+    { label: 'Đang xử lý', value: 'PROCESSING' },
+    { label: 'Đang giao', value: 'SHIPPED' },
+    { label: 'Đã giao', value: 'DELIVERED' },
+    { label: 'Đã hủy', value: 'CANCELED' },
+];
 
 export default function OrderListPage() {
     const dispatch = useAppDispatch();
-    const { enqueueSnackbar } = useSnackbar();
+    const navigate = useNavigate();
 
-    const [refreshTrigger, setRefreshTrigger] = useState(0);
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+    const [currentTab, setCurrentTab] = useState('ALL');
 
-    const refreshTable = () => setRefreshTrigger(val => val + 1);
+    const handleTabChange = (event: SyntheticEvent, newValue: string) => {
+        setCurrentTab(newValue);
+    };
 
-    // Hàm fetchData được truyền xuống cho ReusableTable
     const fetchOrdersData = useCallback(async (params: {
         page: number; size: number; sort?: string; filter?: string;
     }): Promise<Page<Order>> => {
-        console.log("Dispatching fetchAdminOrders with params:", params); // DEBUG
-        const resultAction = await dispatch(fetchAdminOrders(params));
+        const { filter: searchFilter, ...restParams } = params;
 
+        let finalFilter = searchFilter;
+
+        // Chỉ thêm filter trạng thái nếu tab không phải là 'ALL'
+        if (currentTab !== 'ALL') {
+            const statusFilter = `status:'${currentTab}'`;
+            // Gộp filter từ tab và filter từ ô tìm kiếm (nếu có)
+            finalFilter = searchFilter ? `(${searchFilter}) and ${statusFilter}` : statusFilter;
+        }
+
+        const cleanParams = { ...restParams, filter: finalFilter };
+        // Dọn dẹp để không gửi filter=undefined
+        if (!cleanParams.filter) {
+            delete cleanParams.filter;
+        }
+
+        const resultAction = await dispatch(fetchAdminOrders(cleanParams));
         if (fetchAdminOrders.fulfilled.match(resultAction)) {
-            console.log("Fetch successful:", resultAction.payload); // DEBUG
             return resultAction.payload;
         } else {
-            console.error("Fetch failed:", resultAction.payload); // DEBUG
-            // Ném lỗi với message từ Redux
             throw new Error(resultAction.payload as string || 'Failed to fetch orders');
         }
-    }, [dispatch]);
+    }, [dispatch, currentTab]);
 
-    // --- Handlers cho Menu ---
-    const handleMenuClick = (event: MouseEvent<HTMLElement>, order: Order) => {
-        event.stopPropagation();
-        setAnchorEl(event.currentTarget);
-        setSelectedOrder(order);
-    };
-
-    const handleMenuClose = () => {
-        setAnchorEl(null);
-    };
-
-    const handleMenuExited = () => {
-        setSelectedOrder(null);
-    }
-
-    const handleUpdateStatus = (status: string) => {
-        if (selectedOrder) {
-            dispatch(updateOrderStatus({ orderId: selectedOrder.id, status }))
-                .unwrap()
-                .then(() => {
-                    enqueueSnackbar('Cập nhật trạng thái thành công', { variant: 'success' });
-                    // Không cần refreshTable vì reducer đã cập nhật optimistic
-                })
-                .catch((error) => enqueueSnackbar(error || 'Cập nhật thất bại', { variant: 'error' }));
-        }
-        handleMenuClose();
-    };
 
     // Cấu hình các cột cho ReusableTable
     const columns: ColumnConfig<Order>[] = [
@@ -94,58 +70,39 @@ export default function OrderListPage() {
         { id: 'orderDate', label: 'Ngày đặt', sortable: true, render: (order) => formatDate(order.orderDate) },
         { id: 'totalAmount', label: 'Tổng tiền', align: 'right', sortable: true, render: (order) => formatCurrency(order.totalAmount) },
         {
-            id: 'status',
-            label: 'Trạng thái',
-            align: 'center',
-            sortable: true,
+            id: 'status', label: 'Trạng thái', align: 'center', sortable: true,
             render: (order) => <Chip label={getStatusText(order.status)} color={getStatusChipColor(order.status)} size="small" />
         },
     ];
 
-    // Hàm render cột Hành động
-    const renderOrderActions = (order: Order) => (
-        <Tooltip title="Hành động">
-            <IconButton size="small" onClick={(e) => handleMenuClick(e, order)}>
-                <ExpandMoreIcon />
-            </IconButton>
-        </Tooltip>
-    );
 
     return (
-        <>
+        <Box>
+            <Typography variant="h5" component="h2" gutterBottom fontWeight="bold">
+                Quản lý Đơn hàng
+            </Typography>
+
+            <Paper sx={{ borderRadius: 2, mb: 2 }}>
+                <Tabs
+                    value={currentTab}
+                    onChange={handleTabChange}
+                    variant="scrollable"
+                    scrollButtons="auto"
+                >
+                    {STATUS_TABS.map(tab => <Tab key={tab.value} label={tab.label} value={tab.value} />)}
+                </Tabs>
+            </Paper>
+
             <ReusableTable<Order>
-                key={refreshTrigger}
+                key={currentTab}
                 columns={columns}
                 fetchData={fetchOrdersData}
-                title="Quản lý Đơn hàng"
+                title=""
                 searchPlaceholder="Tìm theo Mã ĐH hoặc Tên khách hàng"
                 searchFields={['id', 'customerName']}
-                renderActions={renderOrderActions}
+                onRowClick={(order) => navigate(`/admin/orders/${order.id}`)}
+            // rowActions không cần thiết ở đây nữa
             />
-
-            <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleMenuClose}
-                TransitionProps={{
-                    onExited: handleMenuExited,
-                }}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-            >
-                {selectedOrder && (
-                    [
-                        <MenuItem key="title" disabled><b>Đơn hàng #{selectedOrder.id}</b></MenuItem>,
-                        <Divider key="divider1" />,
-                        <MenuItem key="detail" onClick={handleMenuClose}>Xem chi tiết</MenuItem>,
-                        <Divider key="divider2" />,
-                        <MenuItem key="processing" onClick={() => handleUpdateStatus('PROCESSING')}>Chuyển sang "Đang xử lý"</MenuItem>,
-                        <MenuItem key="shipped" onClick={() => handleUpdateStatus('SHIPPED')}>Chuyển sang "Đang giao"</MenuItem>,
-                        <MenuItem key="delivered" onClick={() => handleUpdateStatus('DELIVERED')}>Chuyển sang "Đã giao"</MenuItem>,
-                        <MenuItem key="canceled" onClick={() => handleUpdateStatus('CANCELED')} sx={{ color: 'error.main' }}>Hủy đơn hàng</MenuItem>
-                    ]
-                )}
-            </Menu>
-        </>
+        </Box>
     );
 }

@@ -3,6 +3,7 @@ import axiosClient from '../../api/axiosClient';
 import type { AppDispatch } from '..';
 import type { ApiResponse } from '../../types';
 import type { AuthRequestDTO, User } from './types';
+import { wsConnect } from '../socket';
 
 // Định nghĩa lại kiểu dữ liệu của API calls để TypeScript hiểu rõ
 const authApi = {
@@ -31,6 +32,8 @@ export const loginUser = createAsyncThunk<User, AuthRequestDTO, { dispatch: AppD
             await authApi.login(credentials);
             const userAction = await dispatch(fetchCurrentUser());
             if (fetchCurrentUser.fulfilled.match(userAction)) {
+                // Dispatch action để middleware bắt và kết nối WebSocket
+                dispatch(wsConnect());
                 return userAction.payload;
             } else {
                 throw new Error('Failed to fetch user after login.');

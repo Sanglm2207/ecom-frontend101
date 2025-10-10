@@ -1,3 +1,5 @@
+import type { ProductImportResult } from "../../api/productApi";
+
 export interface Category {
     id: number;
     name: string;
@@ -31,4 +33,11 @@ export interface ProductState {
     size: number;
     totalElements: number;
     totalPages: number;
+
+    importResult: ProductImportResult | null;
+    importLoading: 'idle' | 'pending';
+    importError: string | null;
+
+    reportLoading: 'idle' | 'pending';
+    reportError: string | null;
 }

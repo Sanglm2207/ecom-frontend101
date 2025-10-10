@@ -21,9 +21,9 @@ declare module '@mui/material/styles' {
 
 const theme = createTheme({
     palette: {
-        mode: 'dark', // Phong cách Apple thường dùng nền tối để hiệu ứng kính nổi bật
+        mode: 'dark',
         primary: {
-            main: '#0A84FF', // Màu xanh dương sáng của Apple
+            main: '#0A84FF',
         },
         background: {
             paper: 'rgba(29, 29, 31, 0.75)',
@@ -37,10 +37,9 @@ const theme = createTheme({
     typography: {
         fontFamily: '"SF Pro Display", "Roboto", "Helvetica", "Arial", sans-serif',
     },
-    // Định nghĩa style "glass"
     glass: {
         backdropFilter: 'blur(20px) saturate(180%)',
-        backgroundColor: 'rgba(29, 29, 31, 0.75)', // Màu nền tối có độ trong suốt
+        backgroundColor: 'rgba(29, 29, 31, 0.75)',
         border: '1px solid rgba(80, 80, 80, 0.5)',
         boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
     },
@@ -48,7 +47,7 @@ const theme = createTheme({
         MuiAppBar: {
             styleOverrides: {
                 root: {
-                    backgroundColor: 'rgba(29, 29, 31, 0.75)', // Màu nền cho AppBar
+                    backgroundColor: 'rgba(29, 29, 31, 0.75)',
                     backdropFilter: 'blur(20px) saturate(180%)',
                     boxShadow: 'none',
                     borderBottom: '1px solid rgba(80, 80, 80, 0.5)',
@@ -65,7 +64,7 @@ const theme = createTheme({
                 },
             },
         },
-    }
+    },
 });
 
 export default theme;

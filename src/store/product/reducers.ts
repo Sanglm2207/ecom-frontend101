@@ -1,5 +1,5 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import { createProduct, deleteProduct, fetchLatestProducts, fetchProductDetail, fetchProducts, updateProduct } from './actions';
+import { createProduct, deleteProduct, exportProductReport, fetchLatestProducts, fetchProductDetail, fetchProducts, importProductsFromFile, updateProduct } from './actions';
 import type { ProductState, Product } from './types';
 import type { Page } from '../../types';
 
@@ -12,12 +12,26 @@ const initialState: ProductState = {
     size: 10,
     totalElements: 0,
     totalPages: 0,
+
+    importResult: null,
+    importLoading: 'idle',
+    importError: null,
+
+    reportLoading: 'idle',
+    reportError: null,
 };
 
 const productSlice = createSlice({
     name: 'product',
     initialState,
-    reducers: {},
+    reducers: {
+        // Action để reset trạng thái import khi rời khỏi trang
+        clearImportResult: (state) => {
+            state.importResult = null;
+            state.importError = null;
+            state.importLoading = 'idle';
+        }
+    },
     extraReducers: (builder) => {
         builder
             // Xử lý luồng fetchProducts (cho trang danh sách sản phẩm)
@@ -89,6 +103,31 @@ const productSlice = createSlice({
                 }
             })
 
+            .addCase(importProductsFromFile.pending, (state) => {
+                state.importLoading = 'pending';
+                state.importResult = null;
+                state.importError = null;
+            })
+            .addCase(importProductsFromFile.fulfilled, (state, action) => {
+                state.importLoading = 'idle';
+                state.importResult = action.payload;
+            })
+            .addCase(importProductsFromFile.rejected, (state, action) => {
+                state.importLoading = 'idle';
+                state.importError = action.payload as string;
+            })
+            .addCase(exportProductReport.pending, (state) => {
+                state.reportLoading = 'pending';
+                state.reportError = null;
+            })
+            .addCase(exportProductReport.fulfilled, (state) => {
+                state.reportLoading = 'idle';
+            })
+            .addCase(exportProductReport.rejected, (state, action) => {
+                state.reportLoading = 'idle';
+                state.reportError = action.payload as string;
+            })
+
             // Bạn cũng có thể thêm các case .pending và .rejected cho các action CUD
             // để quản lý trạng thái loading/error một cách chi tiết hơn.
             .addMatcher(
@@ -106,5 +145,7 @@ const productSlice = createSlice({
             );
     },
 });
+
+export const { clearImportResult } = productSlice.actions;
 
 export default productSlice.reducer;

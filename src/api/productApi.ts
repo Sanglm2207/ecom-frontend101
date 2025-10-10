@@ -13,6 +13,12 @@ export interface ProductPayload {
     imageUrls?: string[],
 }
 
+export interface ProductImportResult {
+    successCount: number;
+    errorCount: number;
+    errors: string[];
+}
+
 
 const productApi = {
     // Dùng `URLSearchParams` để xây dựng query string một cách an toàn
@@ -39,7 +45,7 @@ const productApi = {
    * @param payload - Dữ liệu của sản phẩm mới
    */
     createProduct: (payload: ProductPayload): Promise<{ data: ApiResponse<Product> }> => {
-        return axiosClient.post('/products', payload);
+        return axiosClient.post('/products/', payload);
     },
 
     /**
@@ -57,6 +63,17 @@ const productApi = {
      */
     deleteProduct: (productId: number): Promise<{ data: ApiResponse<void> }> => {
         return axiosClient.delete(`/products/${productId}`);
+    },
+
+    uploadProductsFile: (file: File): Promise<{ data: ApiResponse<ProductImportResult> }> => {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        return axiosClient.post('/products/import', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
     },
 };
 

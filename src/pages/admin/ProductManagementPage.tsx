@@ -1,111 +1,64 @@
-import React, { useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    Tooltip,
-    IconButton,
-    Menu,
-    MenuItem,
     Button,
     Avatar,
+    Box
 } from '@mui/material';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
+import AssessmentIcon from '@mui/icons-material/Assessment';
+import SystemUpdateAltIcon from '@mui/icons-material/SystemUpdateAlt';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useSnackbar } from 'notistack';
 
 import productApi from '../../api/productApi';
-import ReusableTable, { type ColumnConfig } from '../../components/shared/ReusableTable';
-import type { Product } from '../../store/product';
+import ReusableTable, { type ColumnConfig, type ActionItem } from '../../components/shared/ReusableTable';
+import { exportProductReport, type Product } from '../../store/product';
 import type { Page } from '../../types';
+import type { ReportPayload } from '../../api/reportApi';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import ReportFormModal from '../../components/admin/ReportFormModal';
 
 const formatCurrency = (amount: number) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 
 export default function ProductManagementPage() {
     const navigate = useNavigate();
     const { enqueueSnackbar } = useSnackbar();
+    const dispatch = useAppDispatch();
 
-    // State để trigger ReusableTable fetch lại dữ liệu sau khi có thay đổi
+    // State này chỉ dùng để trigger ReusableTable fetch lại dữ liệu
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-    // State cho Menu hành động của mỗi dòng
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+    const refreshTable = () => setRefreshTrigger(val => val + 1);
 
-    /**
-     * Hàm này sẽ được truyền xuống cho ReusableTable để nó có thể gọi API.
-     * useCallback đảm bảo hàm không bị tạo lại mỗi lần render, trừ khi dependency thay đổi.
-     */
     const fetchProductsData = useCallback(async (params: {
-        page: number;
-        size: number;
-        sort?: string;
-        filter?: string;
+        page: number, size: number, sort?: string, filter?: string
     }): Promise<Page<Product>> => {
+        const { filter, ...restParams } = params;
+        const cleanParams: { [key: string]: any } = { ...restParams };
+        if (filter) {
+            cleanParams.filter = filter;
+        }
+
         try {
-            const response = await productApi.getProducts(params);
+            const response = await productApi.getProducts(cleanParams);
             return response.data.data;
         } catch (error) {
             enqueueSnackbar('Không thể tải danh sách sản phẩm', { variant: 'error' });
-            // Trả về một Page rỗng để tránh làm sập component
-            return { content: [], totalElements: 0, totalPages: 0, number: 0, size: params.size, empty: true, first: true, last: true, numberOfElements: 0, pageable: {}, sort: {} };
+            throw error;
         }
     }, []);
-
-    /**
-     * Hàm để kích hoạt việc fetch lại dữ liệu trong ReusableTable.
-     */
-    const refreshTable = () => setRefreshTrigger(val => val + 1);
-
-    // --- Handlers cho Menu Hành động ---
-    const handleMenuClick = (event: React.MouseEvent<HTMLElement>, product: Product) => {
-        setAnchorEl(event.currentTarget);
-        setSelectedProduct(product);
-    };
-
-    const handleMenuClose = () => {
-        setAnchorEl(null);
-        setSelectedProduct(null);
-    };
-
-    const handleEdit = () => {
-        if (selectedProduct) {
-            navigate(`/admin/products/edit/${selectedProduct.id}`);
-        }
-        handleMenuClose();
-    };
-
-    const handleDelete = async () => {
-        if (selectedProduct) {
-            if (window.confirm(`Bạn có chắc muốn xóa sản phẩm "${selectedProduct.name}"?`)) {
-                try {
-                    await productApi.deleteProduct(selectedProduct.id);
-                    enqueueSnackbar('Đã xóa sản phẩm thành công', { variant: 'success' });
-                    refreshTable(); // Yêu cầu bảng tải lại dữ liệu
-                } catch (error) {
-                    enqueueSnackbar('Xóa sản phẩm thất bại', { variant: 'error' });
-                }
-            }
-        }
-        handleMenuClose();
-    };
-    // ------------------------------------
 
     // Cấu hình các cột cho ReusableTable
     const columns: ColumnConfig<Product>[] = [
         {
-            id: 'image', // ID này không nhất thiết phải là key trong data
+            id: 'thumbnailUrl',
             label: 'Ảnh',
-            render: (product) => (
-                <Avatar
-                    variant="rounded"
-                    src={product.thumbnailUrl || `https://via.placeholder.com/40x40?text=${product.name.replace(/\s/g, '+')}`}
-                    alt={product.name}
-                />
-            )
+            render: (product) => <Avatar variant="rounded" src={product.thumbnailUrl || ''} alt={product.name} />
         },
         { id: 'name', label: 'Tên sản phẩm', sortable: true },
-        { id: 'category.name', label: 'Danh mục', sortable: false }, // Sắp xếp theo trường lồng nhau cần cấu hình đặc biệt ở backend
+        { id: 'category.name', label: 'Danh mục', sortable: false },
         {
             id: 'price',
             label: 'Giá',
@@ -121,45 +74,86 @@ export default function ProductManagementPage() {
         },
     ];
 
-    // Hàm render cột Hành động cho mỗi dòng
-    const renderProductActions = (product: Product) => (
-        <>
-            <Tooltip title="Hành động">
-                <IconButton size="small" onClick={(e) => handleMenuClick(e, product)}>
-                    <MoreVertIcon />
-                </IconButton>
-            </Tooltip>
-            {/* Menu sẽ chỉ mở cho sản phẩm đang được chọn */}
-            <Menu anchorEl={anchorEl} open={Boolean(anchorEl) && selectedProduct?.id === product.id} onClose={handleMenuClose}>
-                <MenuItem onClick={handleEdit}>
-                    <EditIcon fontSize="small" sx={{ mr: 1 }} />
-                    Sửa thông tin
-                </MenuItem>
-                <MenuItem sx={{ color: 'error.main' }} onClick={handleDelete}>
-                    <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
-                    Xóa sản phẩm
-                </MenuItem>
-            </Menu>
-        </>
-    );
+    // Định nghĩa các hành động cho mỗi dòng
+    const rowActions: ActionItem<Product>[] = [
+        {
+            label: 'Sửa thông tin',
+            icon: <EditIcon fontSize="small" />,
+            onClick: (product) => navigate(`/admin/products/edit/${product.id}`)
+        },
+        {
+            label: 'Xóa sản phẩm',
+            icon: <DeleteIcon fontSize="small" />,
+            onClick: async (product) => {
+                if (window.confirm(`Bạn có chắc muốn xóa sản phẩm "${product.name}"?`)) {
+                    try {
+                        await productApi.deleteProduct(product.id);
+                        enqueueSnackbar('Đã xóa sản phẩm thành công', { variant: 'success' });
+                        refreshTable(); // Yêu cầu bảng tải lại dữ liệu
+                    } catch (error) {
+                        enqueueSnackbar('Xóa sản phẩm thất bại', { variant: 'error' });
+                    }
+                }
+            },
+            color: 'error.main'
+        },
+    ];
+
+    const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+    const reportLoading = useAppSelector(state => state.product.reportLoading);
+
+    const handleExportReport = (values: ReportPayload) => {
+        dispatch(exportProductReport({ payload: values }))
+            .unwrap()
+            .then(() => {
+                enqueueSnackbar('Đang tải xuống báo cáo...', { variant: 'info' });
+                setIsReportModalOpen(false);
+            })
+            .catch((err) => enqueueSnackbar(err, { variant: 'error' }));
+    };
+
 
     return (
-        <ReusableTable<Product>
-            key={refreshTrigger} // Khi key này thay đổi, ReusableTable sẽ re-mount và fetch lại dữ liệu
-            columns={columns}
-            fetchData={fetchProductsData}
-            title="Quản lý Sản phẩm"
-            searchPlaceholder="Tìm theo tên sản phẩm..."
-            renderActions={renderProductActions}
-            mainAction={
-                <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={() => navigate('/admin/products/new')}
-                >
-                    Thêm sản phẩm
-                </Button>
-            }
-        />
+        <>
+            <ReusableTable<Product>
+                key={refreshTrigger}
+                columns={columns}
+                fetchData={fetchProductsData}
+                title="Quản lý Sản phẩm"
+                searchPlaceholder="Tìm theo tên sản phẩm..."
+                searchFields={['name']}
+                rowActions={rowActions}
+                onRowClick={(product) => navigate(`/admin/products/edit/${product.id}`)}
+                mainAction={
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Button variant="outlined" startIcon={<AssessmentIcon />} onClick={() => setIsReportModalOpen(true)}>
+                            Xuất báo cáo
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            startIcon={<SystemUpdateAltIcon />}
+                            onClick={() => navigate('/admin/products/import')}
+                        >
+                            Nhập từ file
+                        </Button>
+                        <Button
+                            variant="contained"
+                            startIcon={<AddIcon />}
+                            onClick={() => navigate('/admin/products/new')}
+                        >
+                            Thêm sản phẩm
+                        </Button>
+                    </Box>
+                }
+            />
+            {isReportModalOpen && (
+                <ReportFormModal
+                    open={isReportModalOpen}
+                    onClose={() => setIsReportModalOpen(false)}
+                    onSubmit={handleExportReport}
+                    isSubmitting={reportLoading === 'pending'}
+                />
+            )}
+        </>
     );
 }

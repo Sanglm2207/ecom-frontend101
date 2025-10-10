@@ -7,7 +7,8 @@ import { fetchCurrentUser } from './store/auth';
 import LoadingSpinner from './components/shared/LoadingSpinner';
 import { useAppDispatch } from './store/hooks';
 import { fetchCart } from './store/cart';
-
+import { wsConnect } from './store/socket';
+import { fetchUnreadNotifications } from './store/notification';
 function App() {
   const dispatch = useAppDispatch();
   const [isInitializing, setIsInitializing] = useState(true);
@@ -16,9 +17,12 @@ function App() {
     // Thử lấy thông tin người dùng
     dispatch(fetchCurrentUser())
       .unwrap()
-      .then(() => {
-        // Nếu lấy user thành công (đã đăng nhập), thì fetch giỏ hàng
+      .then((user) => { // user được trả về từ payload
+        // Nếu lấy user thành công
         dispatch(fetchCart());
+        // Truyền role vào action
+        dispatch(fetchUnreadNotifications({ role: user.role }));
+        dispatch(wsConnect());
       })
       .catch(() => {
         // Không làm gì nếu chưa đăng nhập

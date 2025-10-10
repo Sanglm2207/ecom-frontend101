@@ -28,6 +28,10 @@ import { selectIsAuthenticated, selectCurrentUser, logout } from '../../store/au
 import { selectTotalCartItems } from '../../store/cart';
 import authApi from '../../api/authApi';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { wsDisconnect } from '../../store/socket';
+import { selectUserUnreadNotificationCount } from '../../store/notification';
+import NotificationsOutlinedIcon from '@mui/icons-material/NotificationsOutlined';
+import NotificationPopover from '../NotificationPopover';
 
 // --- Styled Components for Search Bar ---
 const Search = styled('div')(({ theme }) => ({
@@ -109,6 +113,7 @@ export default function Header() {
         } catch (error) {
             console.error("Logout failed on server:", error);
         } finally {
+            dispatch(wsDisconnect()); // Dispatch action để ngắt kết nối
             dispatch(logout());
             navigate('/auth/login');
         }
@@ -126,9 +131,14 @@ export default function Header() {
 
     const handleCloseSuggestions = () => {
         setShowSuggestions(false);
-        // Tùy chọn: Xóa searchTerm khi click ra ngoài
-        // setSearchTerm(''); 
+        setSearchTerm(''); // Xóa searchTerm khi click ra ngoài
     };
+
+    const unreadNotificationCount = useAppSelector(selectUserUnreadNotificationCount);
+    const [anchorElNotif, setAnchorElNotif] = useState<null | HTMLElement>(null);
+    const handleOpenNotifMenu = (event: MouseEvent<HTMLElement>) => setAnchorElNotif(event.currentTarget);
+    const handleCloseNotifMenu = () => setAnchorElNotif(null);
+
 
     return (
         <AppBar position="sticky" elevation={0}>
@@ -181,12 +191,34 @@ export default function Header() {
                             </IconButton>
                         </Tooltip>
 
+                        {isAuthenticated && (
+                            <>
+                                <Tooltip title="Thông báo">
+                                    <IconButton onClick={handleOpenNotifMenu} size="large" color="inherit">
+                                        <Badge badgeContent={unreadNotificationCount} color="error">
+                                            <NotificationsOutlinedIcon />
+                                        </Badge>
+                                    </IconButton>
+                                </Tooltip>
+                                <NotificationPopover
+                                    anchorEl={anchorElNotif}
+                                    onClose={handleCloseNotifMenu}
+                                    notificationsSource="user" // Chỉ định nguồn là "user"
+                                />
+                            </>
+                        )}
+
                         {isAuthenticated && user ? (
                             // Giao diện khi đã đăng nhập
                             <Box>
                                 <Tooltip title="Mở cài đặt">
                                     <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                                        <Avatar alt={user.username.toUpperCase()}>{user.username.charAt(0).toUpperCase()}</Avatar>
+                                        <Avatar
+                                            alt={user.username.toUpperCase()}
+                                            src={user.avatarUrl}
+                                        >
+                                            {!user.avatarUrl && user.username.charAt(0).toUpperCase()}
+                                        </Avatar>
                                     </IconButton>
                                 </Tooltip>
                                 <Menu
@@ -198,14 +230,18 @@ export default function Header() {
                                     open={Boolean(anchorElUser)}
                                     onClose={handleCloseUserMenu}
                                 >
-                                    <MenuItem onClick={() => { handleCloseUserMenu(); navigate('/profile'); }}>Tài khoản</MenuItem>
+                                    <MenuItem onClick={() => { handleCloseUserMenu(); navigate('/profile'); }}>
+                                        <Typography textAlign="center">Tài khoản</Typography>
+                                    </MenuItem>
                                     <MenuItem onClick={() => { handleCloseUserMenu(); navigate('/profile/orders'); }}>
                                         <Typography textAlign="center">Đơn hàng của tôi</Typography>
                                     </MenuItem>
                                     {user.role === 'ADMIN' && (
                                         <MenuItem onClick={() => { handleCloseUserMenu(); navigate('/admin'); }}>Trang quản trị</MenuItem>
                                     )}
-                                    <MenuItem onClick={handleLogout}>Đăng xuất</MenuItem>
+                                    <MenuItem onClick={handleLogout}>
+                                        <Typography textAlign="center">Đăng xuất</Typography>
+                                    </MenuItem>
                                 </Menu>
                             </Box>
                         ) : (
