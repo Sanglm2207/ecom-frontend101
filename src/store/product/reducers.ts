@@ -1,5 +1,5 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import { createProduct, deleteProduct, fetchLatestProducts, fetchProductDetail, fetchProducts, importProductsFromFile, updateProduct } from './actions';
+import { createProduct, deleteProduct, exportProductReport, fetchLatestProducts, fetchProductDetail, fetchProducts, importProductsFromFile, updateProduct } from './actions';
 import type { ProductState, Product } from './types';
 import type { Page } from '../../types';
 
@@ -16,6 +16,9 @@ const initialState: ProductState = {
     importResult: null,
     importLoading: 'idle',
     importError: null,
+
+    reportLoading: 'idle',
+    reportError: null,
 };
 
 const productSlice = createSlice({
@@ -112,6 +115,17 @@ const productSlice = createSlice({
             .addCase(importProductsFromFile.rejected, (state, action) => {
                 state.importLoading = 'idle';
                 state.importError = action.payload as string;
+            })
+            .addCase(exportProductReport.pending, (state) => {
+                state.reportLoading = 'pending';
+                state.reportError = null;
+            })
+            .addCase(exportProductReport.fulfilled, (state) => {
+                state.reportLoading = 'idle';
+            })
+            .addCase(exportProductReport.rejected, (state, action) => {
+                state.reportLoading = 'idle';
+                state.reportError = action.payload as string;
             })
 
             // Bạn cũng có thể thêm các case .pending và .rejected cho các action CUD

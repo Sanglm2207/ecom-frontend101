@@ -37,6 +37,9 @@ import ProductImportPage from '../pages/admin/ProductImportPage';
 import ProfilePage from '../pages/ProfilePage';
 import UserDetailPage from '../components/admin/UserDetailPage';
 import SettingsPage from '../pages/admin/SettingsPage';
+import DashboardPage from '../pages/admin/DashboardPage';
+import AdminOrderDetailPage from '../pages/admin/AdminOrderDetailPage';
+
 
 /**
  * Component Wrapper để áp dụng theme và background cho khu vực người dùng.
@@ -89,8 +92,9 @@ export default function AppRoutes() {
                 {/* --- Khu vực Admin (sử dụng theme Admin Panel và được bảo vệ) --- */}
                 <Route element={<AdminRoute />}>
                     <Route path="/admin" element={<AdminLayout />}>
-                        <Route index element={<Typography variant="h4">Tổng quan</Typography>} />
+                        <Route index element={<DashboardPage />} />
                         <Route path="orders" element={<OrderListPage />} />
+                        <Route path="orders/:id" element={<AdminOrderDetailPage />} />
                         <Route path="products" element={<ProductManagementPage />} />
                         <Route path="products/new" element={<ProductFormPage />} />
                         <Route path="products/edit/:id" element={<ProductFormPage />} />

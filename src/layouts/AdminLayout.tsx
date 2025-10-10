@@ -11,7 +11,7 @@ export default function AdminLayout() {
                 <AdminSidebar />
                 <Box component="main" sx={{
                     flexGrow: 1,
-                    // p: 3,
+                    p: 3,
                     bgcolor: 'background.default',
                     minHeight: '100vh'
                 }}

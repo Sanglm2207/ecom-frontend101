@@ -37,4 +37,7 @@ export interface ProductState {
     importResult: ProductImportResult | null;
     importLoading: 'idle' | 'pending';
     importError: string | null;
+
+    reportLoading: 'idle' | 'pending';
+    reportError: string | null;
 }

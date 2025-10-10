@@ -10,6 +10,7 @@ import socketReducer from './socket';
 import notificationReducer from './notification';
 import categoryReducer from './category';
 import { socketMiddleware } from './middleware/socketMiddleware';
+import dashboardReducer from './dashboard';
 
 export const store = configureStore({
     reducer: {
@@ -23,6 +24,7 @@ export const store = configureStore({
         socket: socketReducer,
         notification: notificationReducer,
         category: categoryReducer,
+        dashboard: dashboardReducer,
     },
     middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(socketMiddleware),
 

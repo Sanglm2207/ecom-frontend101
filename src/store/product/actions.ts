@@ -2,6 +2,7 @@ import { createAsyncThunk } from '@reduxjs/toolkit';
 import productApi, { type ProductImportResult, type ProductPayload } from '../../api/productApi';
 import type { Product, ProductDetail } from './types';
 import type { Page } from '../../types';
+import reportApi, { type ReportPayload } from '../../api/reportApi';
 
 interface FetchProductsParams {
     filter?: string;
@@ -102,6 +103,34 @@ export const importProductsFromFile = createAsyncThunk<ProductImportResult, File
             return response.data.data;
         } catch (error: any) {
             return rejectWithValue(error.response?.data?.message || 'Import failed');
+        }
+    }
+);
+
+/**
+ * Action để gọi API tạo báo cáo PDF.
+ * Nó không trả về dữ liệu vào Redux store, chỉ xử lý file download.
+ */
+export const exportProductReport = createAsyncThunk<void, { payload: ReportPayload }, { rejectValue: string }>(
+    'product/exportReport',
+    async ({ payload }, { rejectWithValue }) => {
+        try {
+            const response = await reportApi.exportPdfReport(payload);
+
+            // Xử lý file download ở phía client
+            const blob = new Blob([response.data], { type: 'application/pdf' });
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+
+            // Tạo tên file động
+            const filename = `BaoCao_${payload.reportType}_${payload.startDate}_den_${payload.endDate}.pdf`;
+            link.download = filename;
+
+            link.click(); // Tự động click vào link để tải file
+            window.URL.revokeObjectURL(link.href); // Giải phóng bộ nhớ
+
+        } catch (error: any) {
+            return rejectWithValue(error.response?.data?.message || 'Failed to export report');
         }
     }
 );

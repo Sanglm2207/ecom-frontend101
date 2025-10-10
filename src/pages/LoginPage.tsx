@@ -22,8 +22,8 @@ export default function LoginPage() {
     const isAuthenticated = useAppSelector(selectIsAuthenticated);
 
     // State cho form
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
+    const [username, setUsername] = useState('admin');
+    const [password, setPassword] = useState('123456aA@');
 
     // Nếu người dùng đã đăng nhập, tự động chuyển hướng về trang chủ
     useEffect(() => {
